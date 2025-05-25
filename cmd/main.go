@@ -8,6 +8,7 @@ import (
 	"github.com/lijuuu/EmployeeManagement/config"
 	"github.com/lijuuu/EmployeeManagement/controller"
 	"github.com/lijuuu/EmployeeManagement/database"
+	_ "github.com/lijuuu/EmployeeManagement/docs"
 	"github.com/lijuuu/EmployeeManagement/middleware"
 	"github.com/lijuuu/EmployeeManagement/repo"
 	"github.com/lijuuu/EmployeeManagement/routes"
@@ -39,8 +40,8 @@ func main() {
 	e.Use(middleware.RequestLoggerMiddleware())
 	e.Use(middleware.ErrorHandlerMiddleware())
 
-	employeeRepo := repo.NewEmployeeRepo(db, redisClient)
-	employeeService := service.NewEmployeeService(employeeRepo)
+	employeeRepo := repo.NewEmployeeRepo(db)
+	employeeService := service.NewEmployeeService(employeeRepo, redisClient)
 	employeeController := controller.NewEmployeeController(employeeService, cfg)
 
 	routes.SetupRoutes(e, employeeController, cfg)

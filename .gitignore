@@ -1,1 +1,41 @@
+.env# Binaries
+/tmp
+/bin
+/build
+/dist
+*.exe
+*.out
+*.test
+
+# Logs
+*.log
+
+# Dependency directories
+vendor/
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.swp
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Go
+go.sum
+*.mod~
+
+# Docker
+*.local
 .env
+docker-compose.override.yml
+
+
+# Test cache
+*.test
+*.coverprofile
+coverage.out
+
+# Temporary files
+*.tmp
