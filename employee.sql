@@ -1,6 +1,6 @@
 -- name: CreateEmployee :one
-INSERT INTO employees (name, position, salary, hired_date)
-VALUES ($1, $2, $3, $4)
+INSERT INTO employees (id, name, position, salary, hired_date)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id;
 
 -- name: GetEmployeeByID :one

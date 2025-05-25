@@ -21,7 +21,7 @@ func main() {
 		return
 	}
 
-	db, err := database.InitDB(cfg)
+	db, err := database.NewPostgresConn(context.Background(), cfg.PostgresDSN)
 	if err != nil {
 		fmt.Printf("Failed to connect to database: %v\n", err)
 		return

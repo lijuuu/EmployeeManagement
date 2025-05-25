@@ -8,30 +8,33 @@ package repo
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createEmployee = `-- name: CreateEmployee :one
-INSERT INTO employees (name, position, salary, hired_date)
-VALUES ($1, $2, $3, $4)
+INSERT INTO employees (id, name, position, salary, hired_date)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id
 `
 
 type CreateEmployeeParams struct {
+	ID        uuid.UUID   `json:"id"`
 	Name      string      `json:"name"`
 	Position  string      `json:"position"`
-	Salary    int32       `json:"salary"`
+	Salary    float64     `json:"salary"`
 	HiredDate pgtype.Date `json:"hired_date"`
 }
 
-func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (int32, error) {
+func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createEmployee,
+		arg.ID,
 		arg.Name,
 		arg.Position,
 		arg.Salary,
 		arg.HiredDate,
 	)
-	var id int32
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -41,7 +44,7 @@ DELETE FROM employees
 WHERE id = $1
 `
 
-func (q *Queries) DeleteEmployee(ctx context.Context, id int32) error {
+func (q *Queries) DeleteEmployee(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteEmployee, id)
 	return err
 }
@@ -52,7 +55,7 @@ FROM employees
 WHERE id = $1
 `
 
-func (q *Queries) GetEmployeeByID(ctx context.Context, id int32) (Employee, error) {
+func (q *Queries) GetEmployeeByID(ctx context.Context, id uuid.UUID) (Employee, error) {
 	row := q.db.QueryRow(ctx, getEmployeeByID, id)
 	var i Employee
 	err := row.Scan(
@@ -109,9 +112,9 @@ WHERE id = $5
 type UpdateEmployeeParams struct {
 	Name      string      `json:"name"`
 	Position  string      `json:"position"`
-	Salary    int32       `json:"salary"`
+	Salary    float64     `json:"salary"`
 	HiredDate pgtype.Date `json:"hired_date"`
-	ID        int32       `json:"id"`
+	ID        uuid.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {

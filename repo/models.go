@@ -5,14 +5,15 @@
 package repo
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Employee struct {
-	ID        int32            `json:"id"`
+	ID        uuid.UUID        `json:"id"`
 	Name      string           `json:"name"`
 	Position  string           `json:"position"`
-	Salary    int32            `json:"salary"`
+	Salary    float64          `json:"salary"`
 	HiredDate pgtype.Date      `json:"hired_date"`
 	CreatedAt pgtype.Timestamp `json:"created_at"`
 	UpdatedAt pgtype.Timestamp `json:"updated_at"`

@@ -2,14 +2,14 @@ package controller
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/lijuuu/EmployeeManagement/config"
+	"github.com/lijuuu/EmployeeManagement/customerr"
 	"github.com/lijuuu/EmployeeManagement/database"
-	customerr "github.com/lijuuu/EmployeeManagement/customerr"
 	"github.com/lijuuu/EmployeeManagement/service"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -32,7 +32,7 @@ func NewEmployeeController(service service.EmployeeService, cfg *config.Config) 
 // @Produce json
 // @Param credentials body map[string]string true "Admin credentials"
 // @Success 200 {object} map[string]string
-// @Failure 401 {object} err.ErrorResponse
+// @Failure 401 {object} customerr.ErrorResponse
 // @Router /login [post]
 func (c *EmployeeController) Login(ctx echo.Context) error {
 	var credentials struct {
@@ -68,8 +68,8 @@ func (c *EmployeeController) Login(ctx echo.Context) error {
 // @Produce json
 // @Param employee body database.Employee true "Employee data"
 // @Success 201 {object} database.Employee
-// @Failure 400 {object} err.ErrorResponse
-// @Failure 401 {object} err.ErrorResponse
+// @Failure 400 {object} customerr.ErrorResponse
+// @Failure 401 {object} customerr.ErrorResponse
 // @Router /employees [post]
 func (c *EmployeeController) CreateEmployee(ctx echo.Context) error {
 	var emp database.Employee
@@ -92,12 +92,13 @@ func (c *EmployeeController) CreateEmployee(ctx echo.Context) error {
 // @Tags employees
 // @Accept json
 // @Produce json
-// @Param id path int true "Employee ID"
+// @Param id path string true "Employee ID" format(uuid)
 // @Success 200 {object} database.Employee
-// @Failure 404 {object} err.ErrorResponse
+// @Failure 400 {object} customerr.ErrorResponse
+// @Failure 404 {object} customerr.ErrorResponse
 // @Router /employees/{id} [get]
 func (c *EmployeeController) GetEmployee(ctx echo.Context) error {
-	id, err := strconv.Atoi(ctx.Param("id"))
+	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		return customerr.NewError(ctx, http.StatusBadRequest, "Invalid employee ID")
 	}
@@ -116,15 +117,15 @@ func (c *EmployeeController) GetEmployee(ctx echo.Context) error {
 // @Tags employees
 // @Accept json
 // @Produce json
-// @Param id path int true "Employee ID"
+// @Param id path string true "Employee ID" format(uuid)
 // @Param employee body database.Employee true "Employee data"
 // @Success 200 {object} database.Employee
-// @Failure 400 {object} err.ErrorResponse
-// @Failure 401 {object} err.ErrorResponse
-// @Failure 404 {object} err.ErrorResponse
+// @Failure 400 {object} customerr.ErrorResponse
+// @Failure 401 {object} customerr.ErrorResponse
+// @Failure 404 {object} customerr.ErrorResponse
 // @Router /employees/{id} [put]
 func (c *EmployeeController) UpdateEmployee(ctx echo.Context) error {
-	id, err := strconv.Atoi(ctx.Param("id"))
+	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		return customerr.NewError(ctx, http.StatusBadRequest, "Invalid employee ID")
 	}
@@ -148,13 +149,14 @@ func (c *EmployeeController) UpdateEmployee(ctx echo.Context) error {
 // @Tags employees
 // @Accept json
 // @Produce json
-// @Param id path int true "Employee ID"
+// @Param id path string true "Employee ID" format(uuid)
 // @Success 204
-// @Failure 401 {object} err.ErrorResponse
-// @Failure 404 {object} err.ErrorResponse
+// @Failure 400 {object} customerr.ErrorResponse
+// @Failure 401 {object} customerr.ErrorResponse
+// @Failure 404 {object} customerr.ErrorResponse
 // @Router /employees/{id} [delete]
 func (c *EmployeeController) DeleteEmployee(ctx echo.Context) error {
-	id, err := strconv.Atoi(ctx.Param("id"))
+	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		return customerr.NewError(ctx, http.StatusBadRequest, "Invalid employee ID")
 	}
@@ -173,6 +175,7 @@ func (c *EmployeeController) DeleteEmployee(ctx echo.Context) error {
 // @Accept json
 // @Produce json
 // @Success 200 {array} database.Employee
+// @Failure 500 {object} customerr.ErrorResponse
 // @Router /employees [get]
 func (c *EmployeeController) ListEmployees(ctx echo.Context) error {
 	employees, err := c.service.ListEmployees(ctx.Request().Context())

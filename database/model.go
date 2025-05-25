@@ -2,14 +2,16 @@ package database
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Employee struct {
-	ID        int       `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	Position  string    `json:"position"`
-	Salary    int       `json:"salary"`
-	HiredDate string    `json:"hired_date"`
+	Salary    float64   `json:"salary"`
+	HiredDate time.Time `json:"hired_date"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

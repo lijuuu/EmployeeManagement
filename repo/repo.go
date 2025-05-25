@@ -6,47 +6,62 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/lijuuu/EmployeeManagement/database"
 	"github.com/redis/go-redis/v9"
 )
 
 type EmployeeRepo interface {
-	CreateEmployee(ctx context.Context, emp *database.Employee) (int, error)
-	GetEmployeeByID(ctx context.Context, id int) (*database.Employee, error)
-	UpdateEmployee(ctx context.Context, id int, emp *database.Employee) error
-	DeleteEmployee(ctx context.Context, id int) error
+	CreateEmployee(ctx context.Context, emp *database.Employee) (uuid.UUID, error)
+	GetEmployeeByID(ctx context.Context, id uuid.UUID) (*database.Employee, error)
+	UpdateEmployee(ctx context.Context, id uuid.UUID, emp *database.Employee) error
+	DeleteEmployee(ctx context.Context, id uuid.UUID) error
 	ListEmployees(ctx context.Context) ([]database.Employee, error)
 }
 
 type employeeRepo struct {
-	db    *pgx.Conn
-	redis *redis.Client
+	queries *Queries // sqlc generated Queries struct in repo package
+	redis   *redis.Client
 }
 
 func NewEmployeeRepo(db *pgx.Conn, redis *redis.Client) EmployeeRepo {
-	return &employeeRepo{db: db, redis: redis}
+	return &employeeRepo{
+		queries: New(db), // Initialize sqlc Queries from repo package
+		redis:   redis,
+	}
 }
 
-func (r *employeeRepo) CreateEmployee(ctx context.Context, emp *database.Employee) (int, error) {
-	var id int
-	err := r.db.QueryRow(ctx, `
-		INSERT INTO employees (name, position, salary, hired_date)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id
-	`, emp.Name, emp.Position, emp.Salary, emp.HiredDate).Scan(&id)
+func (r *employeeRepo) CreateEmployee(ctx context.Context, emp *database.Employee) (uuid.UUID, error) {
+	id := uuid.New() // Generate UUID in Go
+	_, err := r.queries.CreateEmployee(ctx, CreateEmployeeParams{
+		ID:        id,
+		Name:      emp.Name,
+		Position:  emp.Position,
+		Salary:    emp.Salary,
+		HiredDate: pgtype.Date{Time: emp.HiredDate, Valid: true},
+	})
 	if err != nil {
-		return 0, err
+		return uuid.Nil, fmt.Errorf("failed to create employee: %v", err)
 	}
 
 	emp.ID = id
-	empJSON, _ := json.Marshal(emp)
-	r.redis.Set(ctx, fmt.Sprintf("employee:%d", id), empJSON, 1*time.Hour)
+	empJSON, err := json.Marshal(emp)
+	if err != nil {
+		return id, fmt.Errorf("failed to marshal employee: %v", err)
+	}
+	if err := r.redis.Set(ctx, fmt.Sprintf("employee:%s", id.String()), empJSON, 1*time.Hour).Err(); err != nil {
+		return id, fmt.Errorf("failed to cache employee: %v", err)
+	}
+	if err := r.redis.Del(ctx, "employees:list").Err(); err != nil {
+		return id, fmt.Errorf("failed to invalidate list cache: %v", err)
+	}
 	return id, nil
 }
 
-func (r *employeeRepo) GetEmployeeByID(ctx context.Context, id int) (*database.Employee, error) {
-	cacheKey := fmt.Sprintf("employee:%d", id)
+func (r *employeeRepo) GetEmployeeByID(ctx context.Context, id uuid.UUID) (*database.Employee, error) {
+	cacheKey := fmt.Sprintf("employee:%s", id.String())
 	if cached, err := r.redis.Get(ctx, cacheKey).Result(); err == nil {
 		var emp database.Employee
 		if err := json.Unmarshal([]byte(cached), &emp); err == nil {
@@ -54,43 +69,77 @@ func (r *employeeRepo) GetEmployeeByID(ctx context.Context, id int) (*database.E
 		}
 	}
 
-	var emp database.Employee
-	err := r.db.QueryRow(ctx, `
-		SELECT id, name, position, salary, hired_date, created_at, updated_at
-		FROM employees WHERE id = $1
-	`, id).Scan(&emp.ID, &emp.Name, &emp.Position, &emp.Salary, &emp.HiredDate, &emp.CreatedAt, &emp.UpdatedAt)
+	dbEmp, err := r.queries.GetEmployeeByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get employee: %v", err)
 	}
 
-	empJSON, _ := json.Marshal(emp)
-	r.redis.Set(ctx, cacheKey, empJSON, 1*time.Hour)
-	return &emp, nil
+	// Convert pgtype.Date to time.Time
+	var hiredDate time.Time
+	if dbEmp.HiredDate.Valid {
+		hiredDate = dbEmp.HiredDate.Time
+	} else {
+		return nil, fmt.Errorf("invalid hired_date for employee ID %s", id.String())
+	}
+
+	emp := &database.Employee{
+		ID:        dbEmp.ID,
+		Name:      dbEmp.Name,
+		Position:  dbEmp.Position,
+		Salary:    dbEmp.Salary,
+		HiredDate: hiredDate,
+		CreatedAt: dbEmp.CreatedAt.Time,
+		UpdatedAt: dbEmp.UpdatedAt.Time,
+	}
+
+	empJSON, err := json.Marshal(emp)
+	if err != nil {
+		return emp, fmt.Errorf("failed to marshal employee: %v", err)
+	}
+	if err := r.redis.Set(ctx, cacheKey, empJSON, 1*time.Hour).Err(); err != nil {
+		return emp, fmt.Errorf("failed to cache employee: %v", err)
+	}
+	return emp, nil
 }
 
-func (r *employeeRepo) UpdateEmployee(ctx context.Context, id int, emp *database.Employee) error {
-	_, err := r.db.Exec(ctx, `
-		UPDATE employees
-		SET name = $1, position = $2, salary = $3, hired_date = $4, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $5
-	`, emp.Name, emp.Position, emp.Salary, emp.HiredDate, id)
+func (r *employeeRepo) UpdateEmployee(ctx context.Context, id uuid.UUID, emp *database.Employee) error {
+	err := r.queries.UpdateEmployee(ctx, UpdateEmployeeParams{
+		Name:      emp.Name,
+		Position:  emp.Position,
+		Salary:    emp.Salary,
+		HiredDate: pgtype.Date{Time: emp.HiredDate, Valid: true},
+		ID:        id,
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update employee: %v", err)
 	}
 
 	emp.ID = id
-	empJSON, _ := json.Marshal(emp)
-	r.redis.Set(ctx, fmt.Sprintf("employee:%d", id), empJSON, 1*time.Hour)
+	empJSON, err := json.Marshal(emp)
+	if err != nil {
+		return fmt.Errorf("failed to marshal employee: %v", err)
+	}
+	if err := r.redis.Set(ctx, fmt.Sprintf("employee:%s", id.String()), empJSON, 1*time.Hour).Err(); err != nil {
+		return fmt.Errorf("failed to cache employee: %v", err)
+	}
+	if err := r.redis.Del(ctx, "employees:list").Err(); err != nil {
+		return fmt.Errorf("failed to invalidate list cache: %v", err)
+	}
 	return nil
 }
 
-func (r *employeeRepo) DeleteEmployee(ctx context.Context, id int) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM employees WHERE id = $1`, id)
+func (r *employeeRepo) DeleteEmployee(ctx context.Context, id uuid.UUID) error {
+	err := r.queries.DeleteEmployee(ctx, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete employee: %v", err)
 	}
 
-	r.redis.Del(ctx, fmt.Sprintf("employee:%d", id))
+	if err := r.redis.Del(ctx, fmt.Sprintf("employee:%s", id.String())).Err(); err != nil {
+		return fmt.Errorf("failed to delete employee cache: %v", err)
+	}
+	if err := r.redis.Del(ctx, "employees:list").Err(); err != nil {
+		return fmt.Errorf("failed to invalidate list cache: %v", err)
+	}
 	return nil
 }
 
@@ -103,25 +152,38 @@ func (r *employeeRepo) ListEmployees(ctx context.Context) ([]database.Employee, 
 		}
 	}
 
-	rows, err := r.db.Query(ctx, `
-		SELECT id, name, position, salary, hired_date, created_at, updated_at
-		FROM employees
-	`)
+	dbEmployees, err := r.queries.ListEmployees(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list employees: %v", err)
 	}
-	defer rows.Close()
 
-	var employees []database.Employee
-	for rows.Next() {
-		var emp database.Employee
-		if err := rows.Scan(&emp.ID, &emp.Name, &emp.Position, &emp.Salary, &emp.HiredDate, &emp.CreatedAt, &emp.UpdatedAt); err != nil {
-			return nil, err
+	employees := make([]database.Employee, len(dbEmployees))
+	for i, dbEmp := range dbEmployees {
+		// Convert pgtype.Date to time.Time
+		var hiredDate time.Time
+		if dbEmp.HiredDate.Valid {
+			hiredDate = dbEmp.HiredDate.Time
+		} else {
+			return nil, fmt.Errorf("invalid hired_date for employee ID %s", dbEmp.ID.String())
 		}
-		employees = append(employees, emp)
+
+		employees[i] = database.Employee{
+			ID:        dbEmp.ID,
+			Name:      dbEmp.Name,
+			Position:  dbEmp.Position,
+			Salary:    dbEmp.Salary,
+			HiredDate: hiredDate,
+			CreatedAt: dbEmp.CreatedAt.Time,
+			UpdatedAt: dbEmp.UpdatedAt.Time,
+		}
 	}
 
-	empJSON, _ := json.Marshal(employees)
-	r.redis.Set(ctx, cacheKey, empJSON, 1*time.Hour)
+	empJSON, err := json.Marshal(employees)
+	if err != nil {
+		return employees, fmt.Errorf("failed to marshal employees: %v", err)
+	}
+	if err := r.redis.Set(ctx, cacheKey, empJSON, 1*time.Hour).Err(); err != nil {
+		return employees, fmt.Errorf("failed to cache employees: %v", err)
+	}
 	return employees, nil
 }
