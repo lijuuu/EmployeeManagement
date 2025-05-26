@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -17,13 +18,9 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
+	godotenv.Load()
 
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Config{
+	cfg := &Config{
 		PostgresDSN:   os.Getenv("POSTGRES_DSN"),
 		RedisAddr:     os.Getenv("REDIS_ADDR"),
 		RedisPassword: os.Getenv("REDIS_PASSWORD"),
@@ -31,5 +28,12 @@ func LoadConfig() (*Config, error) {
 		AdminEmail:    os.Getenv("ADMIN_EMAIL"),
 		AdminPassword: os.Getenv("ADMIN_PASSWORD"),
 		JWTSecret:     os.Getenv("JWT_SECRET"),
-	}, nil
+	}
+
+	// validate mandatory fields
+	if cfg.PostgresDSN == "" || cfg.JWTSecret == "" {
+		return nil, errors.New("required environment variables are missing")
+	}
+
+	return cfg, nil
 }
