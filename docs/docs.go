@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/employees": {
             "get": {
-                "description": "Retrieve a list of all employees",
+                "description": "Retrieve a list of all employees. No authentication required.",
                 "consumes": [
                     "application/json"
                 ],
@@ -47,7 +47,12 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new employee record",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new employee record. Requires an ` + "`" + `Authorization` + "`" + ` header with a valid Bearer token (` + "`" + `Bearer \u003ctoken\u003e` + "`" + `).",
                 "consumes": [
                     "application/json"
                 ],
@@ -87,13 +92,19 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/customerr.ErrorResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/customerr.ErrorResponse"
+                        }
                     }
                 }
             }
         },
         "/employees/{id}": {
             "get": {
-                "description": "Retrieve details of a specific employee",
+                "description": "Retrieve details of a specific employee. No authentication required.",
                 "consumes": [
                     "application/json"
                 ],
@@ -136,7 +147,12 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update details of a specific employee",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update details of a specific employee. Requires an ` + "`" + `Authorization` + "`" + ` header with a valid Bearer token (` + "`" + `Bearer \u003ctoken\u003e` + "`" + `).",
                 "consumes": [
                     "application/json"
                 ],
@@ -194,7 +210,12 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete a specific employee",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a specific employee. Requires an ` + "`" + `Authorization` + "`" + ` header with a valid Bearer token (` + "`" + `Bearer \u003ctoken\u003e` + "`" + `).",
                 "consumes": [
                     "application/json"
                 ],
@@ -242,7 +263,7 @@ const docTemplate = `{
         },
         "/login": {
             "post": {
-                "description": "Authenticate admin and return JWT token",
+                "description": "Authenticate admin and return a JWT token for use in the Authorization header as ` + "`" + `Bearer \u003ctoken\u003e` + "`" + `.",
                 "consumes": [
                     "application/json"
                 ],
@@ -260,10 +281,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/database.Credentials"
                         }
                     }
                 ],
@@ -271,14 +289,23 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/database.TokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/customerr.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/customerr.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/customerr.ErrorResponse"
                         }
@@ -291,8 +318,22 @@ const docTemplate = `{
         "customerr.ErrorResponse": {
             "type": "object",
             "properties": {
-                "message": {
-                    "type": "string"
+                "error": {
+                    "type": "string",
+                    "example": "Invalid request body"
+                }
+            }
+        },
+        "database.Credentials": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "admin@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "securepassword"
                 }
             }
         },
@@ -321,18 +362,35 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "database.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "JWT-based authentication. Include the token in the Authorization header as ` + "`" + `Bearer \u003ctoken\u003e` + "`" + `.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0.0",
+	Host:             "localhost:8080",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Employee Management API",
+	Description:      "API for managing employee records with admin authentication",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

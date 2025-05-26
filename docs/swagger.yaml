@@ -1,7 +1,18 @@
+basePath: /
 definitions:
   customerr.ErrorResponse:
     properties:
-      message:
+      error:
+        example: Invalid request body
+        type: string
+    type: object
+  database.Credentials:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      password:
+        example: securepassword
         type: string
     type: object
   database.Employee:
@@ -21,14 +32,24 @@ definitions:
       updated_at:
         type: string
     type: object
+  database.TokenResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+host: localhost:8080
 info:
   contact: {}
+  description: API for managing employee records with admin authentication
+  title: Employee Management API
+  version: 1.0.0
 paths:
   /employees:
     get:
       consumes:
       - application/json
-      description: Retrieve a list of all employees
+      description: Retrieve a list of all employees. No authentication required.
       produces:
       - application/json
       responses:
@@ -48,7 +69,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new employee record
+      description: Create a new employee record. Requires an `Authorization` header
+        with a valid Bearer token (`Bearer <token>`).
       parameters:
       - description: Employee data
         in: body
@@ -71,6 +93,12 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/customerr.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/customerr.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Create a new employee
       tags:
       - employees
@@ -78,7 +106,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete a specific employee
+      description: Delete a specific employee. Requires an `Authorization` header
+        with a valid Bearer token (`Bearer <token>`).
       parameters:
       - description: Employee ID
         format: uuid
@@ -103,13 +132,15 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/customerr.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Delete an employee
       tags:
       - employees
     get:
       consumes:
       - application/json
-      description: Retrieve details of a specific employee
+      description: Retrieve details of a specific employee. No authentication required.
       parameters:
       - description: Employee ID
         format: uuid
@@ -138,7 +169,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update details of a specific employee
+      description: Update details of a specific employee. Requires an `Authorization`
+        header with a valid Bearer token (`Bearer <token>`).
       parameters:
       - description: Employee ID
         format: uuid
@@ -171,6 +203,8 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/customerr.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Update an employee
       tags:
       - employees
@@ -178,30 +212,42 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticate admin and return JWT token
+      description: Authenticate admin and return a JWT token for use in the Authorization
+        header as `Bearer <token>`.
       parameters:
       - description: Admin credentials
         in: body
         name: credentials
         required: true
         schema:
-          additionalProperties:
-            type: string
-          type: object
+          $ref: '#/definitions/database.Credentials'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/database.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/customerr.ErrorResponse'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/customerr.ErrorResponse'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/customerr.ErrorResponse'
       summary: Admin login
       tags:
       - auth
+securityDefinitions:
+  BearerAuth:
+    description: JWT-based authentication. Include the token in the Authorization
+      header as `Bearer <token>`.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

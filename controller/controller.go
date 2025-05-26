@@ -11,7 +11,6 @@ import (
 	"github.com/lijuuu/EmployeeManagement/customerr"
 	"github.com/lijuuu/EmployeeManagement/database"
 	"github.com/lijuuu/EmployeeManagement/service"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // EmployeeController handles HTTP requests for employee operations
@@ -26,24 +25,23 @@ func NewEmployeeController(service service.EmployeeService, cfg *config.Config) 
 
 // Login godoc
 // @Summary Admin login
-// @Description Authenticate admin and return JWT token
+// @Description Authenticate admin and return a JWT token for use in the Authorization header as `Bearer <token>`.
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param credentials body map[string]string true "Admin credentials"
-// @Success 200 {object} map[string]string
+// @Param credentials body database.Credentials true "Admin credentials"
+// @Success 200 {object} database.TokenResponse
+// @Failure 400 {object} customerr.ErrorResponse
 // @Failure 401 {object} customerr.ErrorResponse
+// @Failure 500 {object} customerr.ErrorResponse
 // @Router /login [post]
 func (c *EmployeeController) Login(ctx echo.Context) error {
-	var credentials struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+	var credentials database.Credentials
 	if err := ctx.Bind(&credentials); err != nil {
 		return customerr.NewError(ctx, http.StatusBadRequest, "Invalid request body")
 	}
 
-	if credentials.Email != c.cfg.AdminEmail || bcrypt.CompareHashAndPassword([]byte(c.cfg.AdminPassword), []byte(credentials.Password)) != nil {
+	if credentials.Email != c.cfg.AdminEmail || c.cfg.AdminPassword != credentials.Password {
 		return customerr.NewError(ctx, http.StatusUnauthorized, "Invalid credentials")
 	}
 
@@ -57,19 +55,21 @@ func (c *EmployeeController) Login(ctx echo.Context) error {
 		return customerr.NewError(ctx, http.StatusInternalServerError, "Failed to generate token")
 	}
 
-	return ctx.JSON(http.StatusOK, map[string]string{"token": tokenString})
+	return ctx.JSON(http.StatusOK, database.TokenResponse{Token: tokenString})
 }
 
 // CreateEmployee godoc
 // @Summary Create a new employee
-// @Description Create a new employee record
+// @Description Create a new employee record. Requires an `Authorization` header with a valid Bearer token (`Bearer <token>`).
 // @Tags employees
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param employee body database.Employee true "Employee data"
 // @Success 201 {object} database.Employee
 // @Failure 400 {object} customerr.ErrorResponse
 // @Failure 401 {object} customerr.ErrorResponse
+// @Failure 500 {object} customerr.ErrorResponse
 // @Router /employees [post]
 func (c *EmployeeController) CreateEmployee(ctx echo.Context) error {
 	var emp database.Employee
@@ -88,7 +88,7 @@ func (c *EmployeeController) CreateEmployee(ctx echo.Context) error {
 
 // GetEmployee godoc
 // @Summary Get employee by ID
-// @Description Retrieve details of a specific employee
+// @Description Retrieve details of a specific employee. No authentication required.
 // @Tags employees
 // @Accept json
 // @Produce json
@@ -113,10 +113,11 @@ func (c *EmployeeController) GetEmployee(ctx echo.Context) error {
 
 // UpdateEmployee godoc
 // @Summary Update an employee
-// @Description Update details of a specific employee
+// @Description Update details of a specific employee. Requires an `Authorization` header with a valid Bearer token (`Bearer <token>`).
 // @Tags employees
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "Employee ID" format(uuid)
 // @Param employee body database.Employee true "Employee data"
 // @Success 200 {object} database.Employee
@@ -145,10 +146,11 @@ func (c *EmployeeController) UpdateEmployee(ctx echo.Context) error {
 
 // DeleteEmployee godoc
 // @Summary Delete an employee
-// @Description Delete a specific employee
+// @Description Delete a specific employee. Requires an `Authorization` header with a valid Bearer token (`Bearer <token>`).
 // @Tags employees
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "Employee ID" format(uuid)
 // @Success 204
 // @Failure 400 {object} customerr.ErrorResponse
@@ -170,7 +172,7 @@ func (c *EmployeeController) DeleteEmployee(ctx echo.Context) error {
 
 // ListEmployees godoc
 // @Summary List all employees
-// @Description Retrieve a list of all employees
+// @Description Retrieve a list of all employees. No authentication required.
 // @Tags employees
 // @Accept json
 // @Produce json

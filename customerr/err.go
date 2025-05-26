@@ -5,9 +5,9 @@ import (
 )
 
 type ErrorResponse struct {
-	Message string `json:"message"`
+	Error string `json:"error" example:"Invalid request body"`
 }
 
-func NewError(c echo.Context, status int, message string) error {
-	return c.JSON(status, ErrorResponse{Message: message})
+func NewError(ctx echo.Context, status int, message string) error {
+	return ctx.JSON(status, ErrorResponse{Error: message})
 }

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/lijuuu/EmployeeManagement/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/lijuuu/EmployeeManagement/config"
 	"github.com/lijuuu/EmployeeManagement/controller"
@@ -17,9 +18,7 @@ func SetupRoutes(e *echo.Echo, ctrl *controller.EmployeeController, cfg *config.
 	// Grouped routes for JWT-protected endpoints
 	protected := e.Group("/employees")
 	// Uncomment and fix JWT middleware if needed
-	// protected.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-	// 	SigningKey: []byte(cfg.JWTSecret),
-	// }))
+	protected.Use(middleware.JWTAuthMiddleware(cfg))
 
 	// Protected routes
 	protected.POST("", ctrl.CreateEmployee)
