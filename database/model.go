@@ -15,9 +15,10 @@ type Employee struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
 type Credentials struct {
-	Email    string `json:"email" example:"admin@example.com"`
-	Password string `json:"password" example:"securepassword"`
+	Email    string `json:"email" example:"admin@gmail.com"`
+	Password string `json:"password" example:"password"`
 }
 
 type TokenResponse struct {

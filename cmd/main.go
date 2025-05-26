@@ -15,15 +15,7 @@ import (
 	"github.com/lijuuu/EmployeeManagement/service"
 )
 
-// @title Employee Management API
-// @version 1.0.0
-// @description API for managing employee records with admin authentication
-// @host localhost:8080
-// @BasePath /
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description JWT-based authentication. Include the token in the Authorization header as `Bearer <token>`.
+
 func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
