@@ -43,7 +43,7 @@ func (s *employeeService) CreateEmployee(ctx context.Context, emp *database.Empl
 		return id, fmt.Errorf("failed to marshal employee: %v", err)
 	}
 	cacheKey := fmt.Sprintf("employee:%s", id.String())
-	if err := s.redis.Set(ctx, cacheKey, empJSON, 1*time.Hour).Err(); err != nil {
+	if err := s.redis.Set(ctx, cacheKey, empJSON, 5*time.Minute).Err(); err != nil {
 		return id, fmt.Errorf("failed to cache employee: %v", err)
 	}
 	if err := s.redis.Del(ctx, "employees:list").Err(); err != nil {
@@ -70,7 +70,7 @@ func (s *employeeService) GetEmployeeByID(ctx context.Context, id uuid.UUID) (*d
 	if err != nil {
 		return emp, fmt.Errorf("failed to marshal employee: %v", err)
 	}
-	if err := s.redis.Set(ctx, cacheKey, empJSON, 1*time.Hour).Err(); err != nil {
+	if err := s.redis.Set(ctx, cacheKey, empJSON, 5*time.Minute).Err(); err != nil {
 		return emp, fmt.Errorf("failed to cache employee: %v", err)
 	}
 	return emp, nil
@@ -87,7 +87,7 @@ func (s *employeeService) UpdateEmployee(ctx context.Context, id uuid.UUID, emp 
 		return fmt.Errorf("failed to marshal employee: %v", err)
 	}
 	cacheKey := fmt.Sprintf("employee:%s", id.String())
-	if err := s.redis.Set(ctx, cacheKey, empJSON, 1*time.Hour).Err(); err != nil {
+	if err := s.redis.Set(ctx, cacheKey, empJSON, 5*time.Minute).Err(); err != nil {
 		return fmt.Errorf("failed to cache employee: %v", err)
 	}
 	if err := s.redis.Del(ctx, "employees:list").Err(); err != nil {
@@ -130,7 +130,7 @@ func (s *employeeService) ListEmployees(ctx context.Context) ([]database.Employe
 	if err != nil {
 		return employees, fmt.Errorf("failed to marshal employees: %v", err)
 	}
-	if err := s.redis.Set(ctx, cacheKey, empJSON, 1*time.Hour).Err(); err != nil {
+	if err := s.redis.Set(ctx, cacheKey, empJSON, 5*time.Minute).Err(); err != nil {
 		return employees, fmt.Errorf("failed to cache employees: %v", err)
 	}
 	return employees, nil
