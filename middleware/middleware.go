@@ -55,21 +55,3 @@ func RequestLoggerMiddleware() echo.MiddlewareFunc {
 		}
 	}
 }
-
-// ErrorHandlerMiddleware customizes error responses
-func ErrorHandlerMiddleware() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			err := next(c)
-			if err != nil {
-				switch e := err.(type) {
-				case *echo.HTTPError:
-					return customerr.NewError(c, e.Code, e.Message.(string))
-				default:
-					return customerr.NewError(c, http.StatusInternalServerError, "Internal server error")
-				}
-			}
-			return nil
-		}
-	}
-}

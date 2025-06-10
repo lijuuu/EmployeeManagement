@@ -39,7 +39,6 @@ func main() {
 
 	e := echo.New()
 	e.Use(middleware.RequestLoggerMiddleware())
-	e.Use(middleware.ErrorHandlerMiddleware())
 
 	employeeRepo := repo.NewEmployeeRepo(db)
 	employeeService := service.NewEmployeeService(employeeRepo, redisClient)

@@ -1,16 +1,20 @@
 package routes
 
 import (
-	"github.com/lijuuu/EmployeeManagement/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/lijuuu/EmployeeManagement/config"
 	"github.com/lijuuu/EmployeeManagement/controller"
+	"github.com/lijuuu/EmployeeManagement/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 func SetupRoutes(e *echo.Echo, ctrl *controller.EmployeeController, cfg *config.Config) {
 	// Swagger route
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(200, map[string]string{"status": "ok"})
+	})
 
 	// Login route (non-protected)
 	e.POST("/login", ctrl.Login)
