@@ -9,10 +9,10 @@ definitions:
   database.Credentials:
     properties:
       email:
-        example: admin@example.com
+        example: admin@gmail.com
         type: string
       password:
-        example: securepassword
+        example: password
         type: string
     type: object
   database.Employee:
@@ -38,12 +38,17 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
-host: localhost:8080
+host: employeemanagement-69ga.onrender.com
 info:
-  contact: {}
-  description: API for managing employee records with admin authentication
+  contact:
+    email: liju@example.com
+    name: Liju Thomas
+  description: This is a sample server for managing employees.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
   title: Employee Management API
-  version: 1.0.0
+  version: "1.0"
 paths:
   /employees:
     get:
@@ -243,11 +248,4 @@ paths:
       summary: Admin login
       tags:
       - auth
-securityDefinitions:
-  BearerAuth:
-    description: JWT-based authentication. Include the token in the Authorization
-      header as `Bearer <token>`.
-    in: header
-    name: Authorization
-    type: apiKey
 swagger: "2.0"

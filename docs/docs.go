@@ -9,7 +9,14 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "Liju Thomas",
+            "email": "liju@example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -329,11 +336,11 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "admin@example.com"
+                    "example": "admin@gmail.com"
                 },
                 "password": {
                     "type": "string",
-                    "example": "securepassword"
+                    "example": "password"
                 }
             }
         },
@@ -372,27 +379,21 @@ const docTemplate = `{
                 }
             }
         }
-    },
-    "securityDefinitions": {
-        "BearerAuth": {
-            "description": "JWT-based authentication. Include the token in the Authorization header as ` + "`" + `Bearer \u003ctoken\u003e` + "`" + `.",
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
-        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0.0",
-	Host:             "localhost:8080",
+	Version:          "1.0",
+	Host:             "employeemanagement-69ga.onrender.com",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Employee Management API",
-	Description:      "API for managing employee records with admin authentication",
+	Description:      "This is a sample server for managing employees.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

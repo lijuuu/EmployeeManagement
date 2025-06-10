@@ -15,6 +15,20 @@ import (
 	"github.com/lijuuu/EmployeeManagement/service"
 )
 
+// @title Employee Management API
+// @version 1.0
+// @description This is a sample server for managing employees.
+
+// @contact.name Liju Thomas
+// @contact.email liju@example.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host employeemanagement-69ga.onrender.com
+// @BasePath /
+// @schemes https
+
 
 func main() {
 	cfg, err := config.LoadConfig()
