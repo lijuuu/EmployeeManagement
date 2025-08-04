@@ -385,9 +385,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "employeemanagement-69ga.onrender.com",
+	Host:             "localhost:8080",
 	BasePath:         "/",
-	Schemes:          []string{},
+	Schemes:          []string{"http"},
 	Title:            "Employee Management API",
 	Description:      "This is a sample server for managing employees.",
 	InfoInstanceName: "swagger",

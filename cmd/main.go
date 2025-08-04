@@ -25,9 +25,9 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host employeemanagement-69ga.onrender.com
+// @host localhost:8080
 // @BasePath /
-// @schemes https
+// @schemes http
 
 
 func main() {

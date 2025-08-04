@@ -1,4 +1,7 @@
 {
+    "schemes": [
+        "http"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "This is a sample server for managing employees.",
@@ -13,7 +16,7 @@
         },
         "version": "1.0"
     },
-    "host": "employeemanagement-69ga.onrender.com",
+    "host": "localhost:8080",
     "basePath": "/",
     "paths": {
         "/employees": {
