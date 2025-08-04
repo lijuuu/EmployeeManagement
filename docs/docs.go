@@ -39,10 +39,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/database.Employee"
-                            }
+                            "$ref": "#/definitions/controller.Response"
                         }
                     },
                     "500": {
@@ -85,7 +82,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/database.Employee"
+                            "$ref": "#/definitions/controller.Response"
                         }
                     },
                     "400": {
@@ -136,7 +133,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/database.Employee"
+                            "$ref": "#/definitions/controller.Response"
                         }
                     },
                     "400": {
@@ -193,7 +190,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/database.Employee"
+                            "$ref": "#/definitions/controller.Response"
                         }
                     },
                     "400": {
@@ -296,7 +293,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/database.TokenResponse"
+                            "$ref": "#/definitions/controller.Response"
                         }
                     },
                     "400": {
@@ -322,6 +319,18 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controller.Response": {
+            "type": "object",
+            "properties": {
+                "payload": {},
+                "status": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "integer"
+                }
+            }
+        },
         "customerr.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -369,15 +378,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "database.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                }
-            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
@@ -387,7 +394,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "employeemanagement-69ga.onrender.com",
 	BasePath:         "/",
-	Schemes:          []string{},
+	Schemes:          []string{"https"},
 	Title:            "Employee Management API",
 	Description:      "This is a sample server for managing employees.",
 	InfoInstanceName: "swagger",

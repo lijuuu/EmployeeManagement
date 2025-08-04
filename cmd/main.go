@@ -29,6 +29,10 @@ import (
 // @BasePath /
 // @schemes https
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 
 func main() {
 	cfg, err := config.LoadConfig()
@@ -60,5 +64,5 @@ func main() {
 
 	routes.SetupRoutes(e, employeeController, cfg)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Start(":8080")
 }

@@ -1,5 +1,13 @@
 basePath: /
 definitions:
+  controller.Response:
+    properties:
+      payload: {}
+      status:
+        type: string
+      statusCode:
+        type: integer
+    type: object
   customerr.ErrorResponse:
     properties:
       error:
@@ -32,12 +40,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  database.TokenResponse:
-    properties:
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-    type: object
 host: employeemanagement-69ga.onrender.com
 info:
   contact:
@@ -61,9 +63,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/database.Employee'
-            type: array
+            $ref: '#/definitions/controller.Response'
         "500":
           description: Internal Server Error
           schema:
@@ -89,7 +89,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/database.Employee'
+            $ref: '#/definitions/controller.Response'
         "400":
           description: Bad Request
           schema:
@@ -159,7 +159,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/database.Employee'
+            $ref: '#/definitions/controller.Response'
         "400":
           description: Bad Request
           schema:
@@ -195,7 +195,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/database.Employee'
+            $ref: '#/definitions/controller.Response'
         "400":
           description: Bad Request
           schema:
@@ -232,7 +232,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/database.TokenResponse'
+            $ref: '#/definitions/controller.Response'
         "400":
           description: Bad Request
           schema:
@@ -248,4 +248,11 @@ paths:
       summary: Admin login
       tags:
       - auth
+schemes:
+- https
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

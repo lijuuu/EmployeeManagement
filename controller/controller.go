@@ -13,6 +13,13 @@ import (
 	"github.com/lijuuu/EmployeeManagement/service"
 )
 
+// Response is a generic response struct for all successful endpoint responses
+type Response struct {
+	Status     string      `json:"status"`
+	StatusCode int         `json:"statusCode"`
+	Payload    interface{} `json:"payload"`
+}
+
 // EmployeeController handles HTTP requests for employee operations
 type EmployeeController struct {
 	service service.EmployeeService
@@ -30,7 +37,7 @@ func NewEmployeeController(service service.EmployeeService, cfg *config.Config) 
 // @Accept json
 // @Produce json
 // @Param credentials body database.Credentials true "Admin credentials"
-// @Success 200 {object} database.TokenResponse
+// @Success 200 {object} Response
 // @Failure 400 {object} customerr.ErrorResponse
 // @Failure 401 {object} customerr.ErrorResponse
 // @Failure 500 {object} customerr.ErrorResponse
@@ -55,7 +62,11 @@ func (c *EmployeeController) Login(ctx echo.Context) error {
 		return customerr.NewError(ctx, http.StatusInternalServerError, "Failed to generate token")
 	}
 
-	return ctx.JSON(http.StatusOK, database.TokenResponse{Token: tokenString})
+	return ctx.JSON(http.StatusOK, Response{
+		Status:     "success",
+		StatusCode: http.StatusOK,
+		Payload:    tokenString,
+	})
 }
 
 // CreateEmployee godoc
@@ -66,7 +77,7 @@ func (c *EmployeeController) Login(ctx echo.Context) error {
 // @Produce json
 // @Security BearerAuth
 // @Param employee body database.Employee true "Employee data"
-// @Success 201 {object} database.Employee
+// @Success 201 {object} Response
 // @Failure 400 {object} customerr.ErrorResponse
 // @Failure 401 {object} customerr.ErrorResponse
 // @Failure 500 {object} customerr.ErrorResponse
@@ -83,7 +94,11 @@ func (c *EmployeeController) CreateEmployee(ctx echo.Context) error {
 	}
 
 	emp.ID = id
-	return ctx.JSON(http.StatusCreated, emp)
+	return ctx.JSON(http.StatusCreated, Response{
+		Status:     "success",
+		StatusCode: http.StatusCreated,
+		Payload:    emp,
+	})
 }
 
 // GetEmployee godoc
@@ -93,7 +108,7 @@ func (c *EmployeeController) CreateEmployee(ctx echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "Employee ID" format(uuid)
-// @Success 200 {object} database.Employee
+// @Success 200 {object} Response
 // @Failure 400 {object} customerr.ErrorResponse
 // @Failure 404 {object} customerr.ErrorResponse
 // @Router /employees/{id} [get]
@@ -108,7 +123,11 @@ func (c *EmployeeController) GetEmployee(ctx echo.Context) error {
 		return customerr.NewError(ctx, http.StatusNotFound, "Employee not found")
 	}
 
-	return ctx.JSON(http.StatusOK, emp)
+	return ctx.JSON(http.StatusOK, Response{
+		Status:     "success",
+		StatusCode: http.StatusOK,
+		Payload:    emp,
+	})
 }
 
 // UpdateEmployee godoc
@@ -120,7 +139,7 @@ func (c *EmployeeController) GetEmployee(ctx echo.Context) error {
 // @Security BearerAuth
 // @Param id path string true "Employee ID" format(uuid)
 // @Param employee body database.Employee true "Employee data"
-// @Success 200 {object} database.Employee
+// @Success 200 {object} Response
 // @Failure 400 {object} customerr.ErrorResponse
 // @Failure 401 {object} customerr.ErrorResponse
 // @Failure 404 {object} customerr.ErrorResponse
@@ -141,7 +160,11 @@ func (c *EmployeeController) UpdateEmployee(ctx echo.Context) error {
 	}
 
 	emp.ID = id
-	return ctx.JSON(http.StatusOK, emp)
+	return ctx.JSON(http.StatusOK, Response{
+		Status:     "success",
+		StatusCode: http.StatusOK,
+		Payload:    emp,
+	})
 }
 
 // DeleteEmployee godoc
@@ -176,7 +199,7 @@ func (c *EmployeeController) DeleteEmployee(ctx echo.Context) error {
 // @Tags employees
 // @Accept json
 // @Produce json
-// @Success 200 {array} database.Employee
+// @Success 200 {object} Response
 // @Failure 500 {object} customerr.ErrorResponse
 // @Router /employees [get]
 func (c *EmployeeController) ListEmployees(ctx echo.Context) error {
@@ -185,5 +208,9 @@ func (c *EmployeeController) ListEmployees(ctx echo.Context) error {
 		return customerr.NewError(ctx, http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(http.StatusOK, employees)
+	return ctx.JSON(http.StatusOK, Response{
+		Status:     "success",
+		StatusCode: http.StatusOK,
+		Payload:    employees,
+	})
 }
