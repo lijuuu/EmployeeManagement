@@ -13,17 +13,19 @@ import (
 )
 
 const createEmployee = `-- name: CreateEmployee :one
-INSERT INTO employees (id, name, position, salary, hired_date)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO employees (id, name, position, salary, hired_date, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id
 `
 
 type CreateEmployeeParams struct {
-	ID        uuid.UUID   `json:"id"`
-	Name      string      `json:"name"`
-	Position  string      `json:"position"`
-	Salary    float64     `json:"salary"`
-	HiredDate pgtype.Date `json:"hired_date"`
+	ID        uuid.UUID        `json:"id"`
+	Name      string           `json:"name"`
+	Position  string           `json:"position"`
+	Salary    float64          `json:"salary"`
+	HiredDate pgtype.Date      `json:"hired_date"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+	UpdatedAt pgtype.Timestamp `json:"updated_at"`
 }
 
 func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (uuid.UUID, error) {
@@ -33,6 +35,8 @@ func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) 
 		arg.Position,
 		arg.Salary,
 		arg.HiredDate,
+		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	var id uuid.UUID
 	err := row.Scan(&id)

@@ -30,13 +30,15 @@ func NewEmployeeRepo(db *pgx.Conn) EmployeeRepo {
 }
 
 func (r *employeeRepo) CreateEmployee(ctx context.Context, emp *database.Employee) (uuid.UUID, error) {
-	id := uuid.New() 
+		id := uuid.New() 
 	_, err := r.queries.CreateEmployee(ctx, CreateEmployeeParams{
 		ID:        id,
 		Name:      emp.Name,
 		Position:  emp.Position,
 		Salary:    emp.Salary,
 		HiredDate: pgtype.Date{Time: emp.HiredDate, Valid: true},
+		CreatedAt: pgtype.Timestamp{Time:emp.CreatedAt,Valid: true},
+		UpdatedAt: pgtype.Timestamp{Time: emp.UpdatedAt,Valid: true},
 	})
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("failed to create employee: %v", err)
@@ -51,20 +53,12 @@ func (r *employeeRepo) GetEmployeeByID(ctx context.Context, id uuid.UUID) (*data
 		return nil, fmt.Errorf("failed to get employee: %v", err)
 	}
 
-	
-	var hiredDate time.Time
-	if dbEmp.HiredDate.Valid {
-		hiredDate = dbEmp.HiredDate.Time
-	} else {
-		return nil, fmt.Errorf("invalid hired_date for employee ID %s", id.String())
-	}
-
 	emp := &database.Employee{
 		ID:        dbEmp.ID,
 		Name:      dbEmp.Name,
 		Position:  dbEmp.Position,
 		Salary:    dbEmp.Salary,
-		HiredDate: hiredDate,
+		HiredDate: dbEmp.HiredDate.Time,
 		CreatedAt: dbEmp.CreatedAt.Time,
 		UpdatedAt: dbEmp.UpdatedAt.Time,
 	}
