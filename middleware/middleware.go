@@ -11,7 +11,7 @@ import (
 	customerr "github.com/lijuuu/EmployeeManagement/customerr"
 )
 
-// JWTAuthMiddleware validates JWT tokens for protected routes
+//JWTAuthMiddleware validates JWT tokens for protected routes
 func JWTAuthMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -42,7 +42,7 @@ func JWTAuthMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 	}
 }
 
-// RequestLoggerMiddleware logs incoming requests
+//RequestLoggerMiddleware logs incoming requests
 func RequestLoggerMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

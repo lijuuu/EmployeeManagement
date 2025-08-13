@@ -34,8 +34,11 @@ func NewEmployeeService(repo repo.EmployeeRepo, redis *redis.Client) EmployeeSer
 
 func (s *employeeService) CreateEmployee(ctx context.Context, emp *database.Employee) (uuid.UUID, error) {
 	emp.CreatedAt = time.Now()
-	emp.HiredDate = time.Now()
 	emp.UpdatedAt = time.Now()
+	//check if hireddate is provided
+	if emp.HiredDate.IsZero() {
+		emp.HiredDate = time.Now()
+	}
 
 	id, err := s.repo.CreateEmployee(ctx, emp)
 	if err != nil {
