@@ -1,4 +1,4 @@
-FROM golang:1.24.1
+FROM golang:1.24.1 AS builder
 
 WORKDIR /app
 
@@ -8,6 +8,13 @@ RUN go mod download
 COPY . .
 
 RUN go build -o main ./cmd/main.go
+
+
+FROM debian:bullseye-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/main .
 
 EXPOSE 8080
 
